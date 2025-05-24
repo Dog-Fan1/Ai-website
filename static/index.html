@@ -2,37 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI Chat (Warm UI)</title>
+  <title>AI Chat (Warm UI, Multi-Chat)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="chat-container">
-    <h1>AI Chat</h1>
-    <div class="auth-section">
-      <div class="auth-card">
-        <h2>Sign Up</h2>
-        <input id="signup-username" type="text" placeholder="Username">
-        <input id="signup-password" type="password" placeholder="Password">
-        <button id="signupBtn">Sign Up</button>
-        <span id="signup-result"></span>
-      </div>
-      <div class="auth-card">
-        <h2>Login</h2>
-        <input id="login-username" type="text" placeholder="Username">
-        <input id="login-password" type="password" placeholder="Password">
-        <button id="loginBtn">Login</button>
-        <span id="login-result"></span>
-      </div>
-    </div>
-    <div class="chat-section">
-      <div id="chatHistory"></div>
-      <div class="chat-input-row">
-        <input id="promptInput" type="text" placeholder="Type your message..." disabled>
-        <button id="chatBtn" disabled>Send</button>
+  <div class="main-layout">
+    <aside class="sidebar">
+      <div class="auth-section">
+        <div class="auth-card">
+          <h2>Sign Up</h2>
+          <input id="signup-username" type="text" placeholder="Username">
+          <input id="signup-password" type="password" placeholder="Password">
+          <button id="signupBtn">Sign Up</button>
+          <span id="signup-result"></span>
+        </div>
+        <div class="auth-card">
+          <h2>Login</h2>
+          <input id="login-username" type="text" placeholder="Username">
+          <input id="login-password" type="password" placeholder="Password">
+          <button id="loginBtn">Login</button>
+          <span id="login-result"></span>
+        </div>
         <button id="logoutBtn" disabled>Logout</button>
       </div>
-    </div>
+      <div class="chats-section">
+        <h3>Your Chats</h3>
+        <button id="newChatBtn" disabled>+ New Chat</button>
+        <ul id="chatList"></ul>
+      </div>
+    </aside>
+    <main class="chat-container">
+      <h1>AI Chat</h1>
+      <div class="chat-section">
+        <div id="chatHistory" class="chat-history"></div>
+        <div class="chat-input-row">
+          <input id="promptInput" type="text" placeholder="Type your message..." disabled>
+          <button id="chatBtn" disabled>Send</button>
+        </div>
+      </div>
+    </main>
   </div>
   <script src="script.js"></script>
 </body>

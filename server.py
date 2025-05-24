@@ -13,7 +13,7 @@ app.config['SESSION_COOKIE_SECURE'] = True
 CORS(app, supports_credentials=True)
 
 USER_DB = "users.db"
-CHATS_DB = "chats.db"  # For multiple chats per user
+CHATS_DB = "chats.db"
 
 def get_user(username):
     with shelve.open(USER_DB) as db:
@@ -61,19 +61,34 @@ def login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
+
+    # Admin check
+    if username == "Admin" and password == "SiETHOwROltu":
+        session["username"] = username
+        session["is_admin"] = True
+        chats = get_user_chats(username)
+        return jsonify({
+            "message": "Login successful",
+            "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats],
+            "is_admin": True
+        })
+
     password_hash = get_user(username)
     if not password_hash or not check_password_hash(password_hash, password):
         return jsonify({"error": "Invalid credentials"}), 401
     session["username"] = username
+    session["is_admin"] = False
     chats = get_user_chats(username)
     return jsonify({
         "message": "Login successful",
-        "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats]
+        "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats],
+        "is_admin": False
     })
 
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("username", None)
+    session.pop("is_admin", None)
     return jsonify({"message": "Logged out"})
 
 @app.route("/new_chat", methods=["POST"])
@@ -116,9 +131,9 @@ def chat(chat_id):
         return jsonify({"error": "Chat not found"}), 404
     chats[chat_id].append({"role": "user", "content": prompt})
 
-    # Groq Llama-3 API integration
+    # Groq Llama-3 API integration (Markdown output)
     api_key = os.environ.get("GROQ_API_KEY")
-    messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant."}]
+    messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant. Always use Markdown formatting in your responses."}]
     for msg in chats[chat_id]:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
@@ -146,6 +161,17 @@ def chat(chat_id):
         "response": ai_response,
         "history": chats[chat_id]
     })
+
+@app.route("/admin", methods=["GET"])
+def admin_panel():
+    if session.get("is_admin"):
+        # Example: return user list and chat counts
+        with shelve.open(USER_DB) as users, shelve.open(CHATS_DB) as chats:
+            user_list = list(users.keys())
+            chat_stats = {u: len(chats.get(u, {})) for u in user_list}
+        return jsonify({"users": user_list, "chat_stats": chat_stats})
+    else:
+        return jsonify({"error": "Not authorized"}), 403
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)

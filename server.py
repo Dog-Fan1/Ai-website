@@ -1,75 +1,110 @@
-from flask import Flask, request, jsonify, session
-from flask_cors import CORS
-from werkzeug.security import generate_password_hash, check_password_hash
-import shelve
+from flask import Flask, request, jsonify, send_from_directory, session
+import sqlite3
 import os
 
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
-CORS(app, supports_credentials=True)
+app = Flask(__name__, static_folder='.')
+app.secret_key = 'your-super-secret-key'  # Use a strong key in production
 
-USER_DB = "users.db"
-MEMORY_DB = "memory.db"
+# ---------------------
+# Frontend Routes
+# ---------------------
 
-def get_user(username):
-    with shelve.open(USER_DB) as db:
-        return db.get(username)
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
-def save_user(username, password_hash):
-    with shelve.open(USER_DB, writeback=True) as db:
-        db[username] = password_hash
+@app.route('/script.js')
+def serve_js():
+    return send_from_directory('.', 'script.js')
 
-def get_memory(username):
-    with shelve.open(MEMORY_DB) as db:
-        return db.get(username, [])
+@app.route('/styles.css')
+def serve_css():
+    return send_from_directory('.', 'styles.css')
 
-def save_memory(username, memory):
-    with shelve.open(MEMORY_DB, writeback=True) as db:
-        db[username] = memory
 
-@app.route("/signup", methods=["POST"])
+# ---------------------
+# Authentication Logic
+# ---------------------
+
+def init_db():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+@app.route('/signup', methods=['POST'])
 def signup():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+
     if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
-    if get_user(username):
-        return jsonify({"error": "User already exists"}), 400
-    password_hash = generate_password_hash(password)
-    save_user(username, password_hash)
-    return jsonify({"message": "User created successfully"})
+        return jsonify(error="Username and password required"), 400
 
-@app.route("/login", methods=["POST"])
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    try:
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        conn.commit()
+        return jsonify(message="User created successfully")
+    except sqlite3.IntegrityError:
+        return jsonify(error="Username already exists"), 409
+    finally:
+        conn.close()
+
+@app.route('/login', methods=['POST'])
 def login():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
-    password_hash = get_user(username)
-    if not password_hash or not check_password_hash(password_hash, password):
-        return jsonify({"error": "Invalid credentials"}), 401
-    session["username"] = username
-    return jsonify({"message": "Login successful"})
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
 
-@app.route("/logout", methods=["POST"])
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+    user = c.fetchone()
+    conn.close()
+
+    if user:
+        session['username'] = username
+        return jsonify(message="Login successful")
+    else:
+        return jsonify(error="Invalid username or password"), 401
+
+@app.route('/logout', methods=['POST'])
 def logout():
-    session.pop("username", None)
-    return jsonify({"message": "Logged out"})
+    session.pop('username', None)
+    return jsonify(message="Logged out")
 
-@app.route("/chat", methods=["POST"])
+
+# ---------------------
+# Chat Route (Authenticated)
+# ---------------------
+
+@app.route('/chat', methods=['POST'])
 def chat():
-    if "username" not in session:
-        return jsonify({"error": "Not authenticated"}), 401
-    username = session["username"]
-    prompt = request.json.get("prompt", "")
-    memory = get_memory(username)
-    memory.append({"role": "user", "content": prompt})
-    # Replace this with your LLM call if needed
-    ai_response = f"Echo: {prompt}"
-    memory.append({"role": "assistant", "content": ai_response})
-    save_memory(username, memory)
-    return jsonify({"response": ai_response})
+    if 'username' not in session:
+        return jsonify(error="Not authenticated"), 401
 
-if __name__ == "__main__":
-    # For local dev only; on Render, Gunicorn will be used
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    data = request.get_json()
+    prompt = data.get('prompt', '').strip()
+
+    if not prompt:
+        return jsonify(error="Prompt is required"), 400
+
+    # Fake response for now
+    return jsonify(response=f"Echo: {prompt}")
+
+# ---------------------
+# Run the App
+# ---------------------
+
+if __name__ == '__main__':
+    init_db()
+    app.run(host='0.0.0.0', port=5000)

@@ -71,5 +71,5 @@ def chat():
     return jsonify({"response": ai_response})
 
 if __name__ == "__main__":
-    # For production, use Gunicorn or Waitress to run this app!
+    # For local dev only; on Render, Gunicorn will be used
     app.run(host="0.0.0.0", port=8000, debug=False)

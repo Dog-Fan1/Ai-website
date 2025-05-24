@@ -50,7 +50,6 @@ def signup():
         return jsonify({"error": "User already exists"}), 400
     password_hash = generate_password_hash(password)
     save_user(username, password_hash)
-    # Create default chat for new user
     chats = {}
     chat_id = str(uuid.uuid4())
     chats[chat_id] = []
@@ -119,7 +118,7 @@ def chat(chat_id):
 
     # Groq Llama-3 API integration
     api_key = os.environ.get("GROQ_API_KEY")
-    messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
+    messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant."}]
     for msg in chats[chat_id]:
         messages.append({"role": msg["role"], "content": msg["content"]})
 

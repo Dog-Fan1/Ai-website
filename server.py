@@ -1,17 +1,14 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import shelve
 import os
 import requests
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
-
-# These settings are critical for cross-origin authentication!
 app.config['SESSION_COOKIE_SAMESITE'] = "None"
 app.config['SESSION_COOKIE_SECURE'] = True
-
 CORS(app, supports_credentials=True)
 
 USER_DB = "users.db"
@@ -34,8 +31,13 @@ def save_memory(username, memory):
         db[username] = memory
 
 @app.route("/", methods=["GET"])
-def home():
-    return "Backend is running! Use the frontend to interact.", 200
+def root():
+    return send_from_directory(app.static_folder, "index.html")
+
+@app.route("/<path:path>")
+def static_proxy(path):
+    # serve static files
+    return send_from_directory(app.static_folder, path)
 
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -75,33 +77,31 @@ def chat():
     memory = get_memory(username)
     memory.append({"role": "user", "content": prompt})
 
-    # Use Groq Llama-3 for AI response
-    messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
-    for msg in memory:
-        messages.append({"role": msg["role"], "content": msg["content"]})
+    # --- Use Groq API here if desired ---
+    # Example: (uncomment and fill in your Groq API key)
+    # api_key = os.environ.get("GROQ_API_KEY")
+    # messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
+    # for msg in memory:
+    #     messages.append({"role": msg["role"], "content": msg["content"]})
+    # response = requests.post(
+    #     "https://api.groq.com/openai/v1/chat/completions",
+    #     headers={
+    #         "Authorization": f"Bearer {api_key}",
+    #         "Content-Type": "application/json"
+    #     },
+    #     json={
+    #         "model": "llama3-70b-8192",
+    #         "messages": messages,
+    #         "max_tokens": 500
+    #     }
+    # )
+    # if response.status_code != 200:
+    #     return jsonify({"error": "Groq API error", "details": response.text}), 500
+    # data = response.json()
+    # ai_response = data["choices"][0]["message"]["content"]
 
-    api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key:
-        return jsonify({"error": "Groq API key not set"}), 500
-
-    response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "llama3-70b-8192",  # Or "llama3-8b-8192" for smaller model
-            "messages": messages,
-            "max_tokens": 500
-        }
-    )
-
-    if response.status_code != 200:
-        return jsonify({"error": "Groq API error", "details": response.text}), 500
-
-    data = response.json()
-    ai_response = data["choices"][0]["message"]["content"]
+    # --- For now, just echo ---
+    ai_response = f"Echo: {prompt}"
 
     memory.append({"role": "assistant", "content": ai_response})
     save_memory(username, memory)

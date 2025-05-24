@@ -86,7 +86,7 @@ def chat():
             "Content-Type": "application/json"
         },
         json={
-            "model": "llama3-70b-8192",  # Use "llama3-8b-8192" for the smaller model if you want
+            "model": "llama3-70b-8192",  # Or "llama3-8b-8192" for the smaller model
             "messages": messages,
             "max_tokens": 500
         }

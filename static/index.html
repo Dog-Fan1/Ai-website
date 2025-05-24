@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI Chat (Warm UI, Multi-Chat)</title>
+  <title>AmberMind Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Favicon: Amber brain SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cellipse cx='16' cy='16' rx='14' ry='14' fill='%23FFB347'/%3E%3Cpath d='M10 18 Q16 26 22 18' stroke='%23fff' stroke-width='2' fill='none'/%3E%3Cpath d='M12 13 Q16 10 20 13' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -33,7 +35,7 @@
       </div>
     </aside>
     <main class="chat-container">
-      <h1>AI Chat</h1>
+      <h1 id="greetingHeader" class="greeting-header">Welcome to AmberMind!</h1>
       <div class="chat-section">
         <div id="chatHistory" class="chat-history"></div>
         <div class="chat-input-row">

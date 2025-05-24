@@ -36,7 +36,6 @@ def root():
 
 @app.route("/<path:path>")
 def static_proxy(path):
-    # serve static files
     return send_from_directory(app.static_folder, path)
 
 @app.route("/signup", methods=["POST"])
@@ -77,35 +76,36 @@ def chat():
     memory = get_memory(username)
     memory.append({"role": "user", "content": prompt})
 
-    # --- Use Groq API here if desired ---
-    # Example: (uncomment and fill in your Groq API key)
-    # api_key = os.environ.get("GROQ_API_KEY")
-    # messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
-    # for msg in memory:
-    #     messages.append({"role": msg["role"], "content": msg["content"]})
-    # response = requests.post(
-    #     "https://api.groq.com/openai/v1/chat/completions",
-    #     headers={
-    #         "Authorization": f"Bearer {api_key}",
-    #         "Content-Type": "application/json"
-    #     },
-    #     json={
-    #         "model": "llama3-70b-8192",
-    #         "messages": messages,
-    #         "max_tokens": 500
-    #     }
-    # )
-    # if response.status_code != 200:
-    #     return jsonify({"error": "Groq API error", "details": response.text}), 500
-    # data = response.json()
-    # ai_response = data["choices"][0]["message"]["content"]
+    # Groq Llama-3 API integration
+    api_key = os.environ.get("GROQ_API_KEY")
+    messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
+    for msg in memory:
+        messages.append({"role": msg["role"], "content": msg["content"]})
 
-    # --- For now, just echo ---
-    ai_response = f"Echo: {prompt}"
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "llama3-70b-8192",
+            "messages": messages,
+            "max_tokens": 500
+        }
+    )
+    if response.status_code != 200:
+        return jsonify({"error": "Groq API error", "details": response.text}), 500
+
+    data = response.json()
+    ai_response = data["choices"][0]["message"]["content"]
 
     memory.append({"role": "assistant", "content": ai_response})
     save_memory(username, memory)
-    return jsonify({"response": ai_response})
+    return jsonify({
+        "response": ai_response,
+        "history": memory  # Send full chat history
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)

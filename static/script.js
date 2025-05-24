@@ -1,6 +1,7 @@
 const API_BASE = '';
-
 let currentChatId = null;
+let currentUsername = null;
+let hasChatted = false;
 
 function renderHistory(history) {
   const chatDiv = document.getElementById('chatHistory');
@@ -13,7 +14,7 @@ function renderHistory(history) {
     if (msg.role === "user") {
       chatDiv.innerHTML += `<div class="user-msg">You: ${msg.content}</div>`;
     } else if (msg.role === "assistant") {
-      chatDiv.innerHTML += `<div class="assistant-msg">AI: ${msg.content}</div>`;
+      chatDiv.innerHTML += `<div class="assistant-msg">AmberMind: ${msg.content}</div>`;
     }
   });
   chatDiv.scrollTop = chatDiv.scrollHeight;
@@ -33,6 +34,7 @@ function renderChats(chats) {
 
 function selectChat(chat_id) {
   currentChatId = chat_id;
+  hasChatted = false;
   fetch(`${API_BASE}/history/${chat_id}`, {
     method: 'GET',
     credentials: 'include'
@@ -43,6 +45,7 @@ function selectChat(chat_id) {
     updateChatList();
     document.getElementById('promptInput').disabled = false;
     document.getElementById('chatBtn').disabled = false;
+    showGreeting();
   });
 }
 
@@ -55,6 +58,18 @@ function updateChatList() {
   .then(data => {
     if (data.chats) renderChats(data.chats);
   });
+}
+
+function showGreeting() {
+  const header = document.getElementById('greetingHeader');
+  if (currentUsername && !hasChatted) {
+    header.textContent = `Hi ${currentUsername}!`;
+    header.style.display = "block";
+  }
+}
+
+function hideGreeting() {
+  document.getElementById('greetingHeader').style.display = "none";
 }
 
 document.getElementById('signupBtn').onclick = function() {
@@ -72,8 +87,12 @@ document.getElementById('signupBtn').onclick = function() {
     document.getElementById('signup-result').textContent = data.message || data.error;
     if (data.chat_id) {
       currentChatId = data.chat_id;
+      currentUsername = document.getElementById('signup-username').value;
       updateChatList();
       selectChat(currentChatId);
+      document.getElementById('logoutBtn').disabled = false;
+      document.getElementById('newChatBtn').disabled = false;
+      showGreeting();
     }
   });
 };
@@ -93,17 +112,19 @@ document.getElementById('loginBtn').onclick = function() {
     document.getElementById('login-result').textContent = data.message || data.error;
     if (data.chats && data.chats.length > 0) {
       currentChatId = data.chats[0].chat_id;
+      currentUsername = document.getElementById('login-username').value;
       renderChats(data.chats);
       selectChat(currentChatId);
       document.getElementById('logoutBtn').disabled = false;
       document.getElementById('newChatBtn').disabled = false;
+      showGreeting();
     }
   });
 };
 
 document.getElementById('chatBtn').onclick = function() {
   const prompt = document.getElementById('promptInput').value.trim();
-  if (!currentChatId) return;
+  if (!currentChatId || !prompt) return;
   fetch(`${API_BASE}/chat/${currentChatId}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -112,6 +133,8 @@ document.getElementById('chatBtn').onclick = function() {
   })
   .then(r => r.json())
   .then(data => {
+    hasChatted = true;
+    hideGreeting();
     renderHistory(data.history);
     updateChatList();
     document.getElementById('promptInput').value = '';
@@ -131,6 +154,10 @@ document.getElementById('logoutBtn').onclick = function() {
     renderHistory([]);
     renderChats([]);
     currentChatId = null;
+    currentUsername = null;
+    hasChatted = false;
+    document.getElementById('greetingHeader').textContent = "Welcome to AmberMind!";
+    document.getElementById('greetingHeader').style.display = "block";
   });
 };
 
@@ -143,8 +170,10 @@ document.getElementById('newChatBtn').onclick = function() {
   .then(data => {
     if (data.chat_id) {
       currentChatId = data.chat_id;
+      hasChatted = false;
       updateChatList();
       selectChat(currentChatId);
+      showGreeting();
     }
   });
 };

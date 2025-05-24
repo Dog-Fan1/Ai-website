@@ -39,7 +39,7 @@ body {
 
 .auth-card h2 {
   margin-bottom: 0.7em;
-  color: #ff8c42;
+  color: #ffb347;
   font-size: 1.1em;
 }
 
@@ -55,7 +55,7 @@ input[type="text"], input[type="password"] {
 }
 
 input[type="text"]:focus, input[type="password"]:focus {
-  border: 1.5px solid #ffae42;
+  border: 1.5px solid #ffb347;
   outline: none;
 }
 
@@ -63,7 +63,7 @@ button {
   padding: 0.4em 1em;
   font-size: 1em;
   margin: 0.2em 0.3em 0.2em 0;
-  background: #ff8c42;
+  background: #ffb347;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -108,7 +108,7 @@ button:disabled {
 
 #chatList li.selected, #chatList li:hover {
   background: #ffebd6;
-  border: 2px solid #ffb84d;
+  border: 2px solid #ffb347;
 }
 
 .chat-container {
@@ -125,12 +125,13 @@ button:disabled {
   align-items: center;
 }
 
-h1 {
-  color: #ff8c42;
+.greeting-header {
+  color: #ffb347;
   margin-bottom: 1em;
   font-size: 2em;
   font-weight: bold;
   letter-spacing: 1px;
+  text-align: center;
 }
 
 .chat-section {

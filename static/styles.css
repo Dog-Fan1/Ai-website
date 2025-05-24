@@ -1,1 +1,46 @@
+body {
+  background: #e3f0ff;
+  font-family: Arial, sans-serif;
+  padding: 2em;
+  max-width: 600px;
+  margin: auto;
+}
 
+h1 {
+  color: #2266aa;
+}
+
+input[type="text"], input[type="password"] {
+  width: 60%;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: 1em;
+}
+
+button {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  margin-left: 0.5em;
+  background: #2266aa;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+#chatResult {
+  background: #fff;
+  padding: 1em;
+  border-radius: 8px;
+  margin-top: 1em;
+  min-height: 2em;
+  font-size: 1.1em;
+  white-space: pre-wrap;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(34,102,170,0.07);
+}

@@ -2,4 +2,4 @@ flask
 flask_cors
 werkzeug
 gunicorn
-lmstudio
+requests

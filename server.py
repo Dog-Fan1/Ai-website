@@ -7,6 +7,11 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+
+# These settings are critical for cross-origin authentication!
+app.config['SESSION_COOKIE_SAMESITE'] = "None"
+app.config['SESSION_COOKIE_SECURE'] = True
+
 CORS(app, supports_credentials=True)
 
 USER_DB = "users.db"
@@ -70,7 +75,7 @@ def chat():
     memory = get_memory(username)
     memory.append({"role": "user", "content": prompt})
 
-    # Prepare messages for Groq Llama-3 API
+    # Use Groq Llama-3 for AI response
     messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
     for msg in memory:
         messages.append({"role": msg["role"], "content": msg["content"]})
@@ -86,7 +91,7 @@ def chat():
             "Content-Type": "application/json"
         },
         json={
-            "model": "llama3-70b-8192",  # Or "llama3-8b-8192" for the smaller model
+            "model": "llama3-70b-8192",  # Or "llama3-8b-8192" for smaller model
             "messages": messages,
             "max_tokens": 500
         }

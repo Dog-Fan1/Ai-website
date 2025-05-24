@@ -28,6 +28,10 @@ def save_memory(username, memory):
     with shelve.open(MEMORY_DB, writeback=True) as db:
         db[username] = memory
 
+@app.route("/", methods=["GET"])
+def home():
+    return "Backend is running! Use the frontend to interact.", 200
+
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.json

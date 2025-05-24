@@ -1,5 +1,7 @@
+const API_BASE = 'https://ai-website-58an.onrender.com';
+
 document.getElementById('signupBtn').onclick = function() {
-  fetch('/signup', {
+  fetch(`${API_BASE}/signup`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -13,7 +15,7 @@ document.getElementById('signupBtn').onclick = function() {
 };
 
 document.getElementById('loginBtn').onclick = function() {
-  fetch('/login', {
+  fetch(`${API_BASE}/login`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -35,7 +37,7 @@ document.getElementById('loginBtn').onclick = function() {
 
 document.getElementById('chatBtn').onclick = function() {
   const prompt = document.getElementById('promptInput').value.trim();
-  fetch('/chat', {
+  fetch(`${API_BASE}/chat`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({prompt}),
@@ -48,7 +50,7 @@ document.getElementById('chatBtn').onclick = function() {
 };
 
 document.getElementById('logoutBtn').onclick = function() {
-  fetch('/logout', {
+  fetch(`${API_BASE}/logout`, {
     method: 'POST',
     credentials: 'include'
   }).then(r => r.json())

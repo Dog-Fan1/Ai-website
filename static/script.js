@@ -2,6 +2,7 @@ const API_BASE = '';
 let currentChatId = null;
 let currentUsername = null;
 let hasChatted = false;
+let isAdmin = false;
 
 function renderHistory(history) {
   const chatDiv = document.getElementById('chatHistory');
@@ -12,9 +13,9 @@ function renderHistory(history) {
   }
   history.forEach(msg => {
     if (msg.role === "user") {
-      chatDiv.innerHTML += `<div class="user-msg">You: ${msg.content}</div>`;
+      chatDiv.innerHTML += `<div class="user-msg">You: ${marked.parse(msg.content)}</div>`;
     } else if (msg.role === "assistant") {
-      chatDiv.innerHTML += `<div class="assistant-msg">AmberMind: ${msg.content}</div>`;
+      chatDiv.innerHTML += `<div class="assistant-msg">AmberMind: ${marked.parse(msg.content)}</div>`;
     }
   });
   chatDiv.scrollTop = chatDiv.scrollHeight;
@@ -113,17 +114,42 @@ document.getElementById('loginBtn').onclick = function() {
     if (data.chats && data.chats.length > 0) {
       currentChatId = data.chats[0].chat_id;
       currentUsername = document.getElementById('login-username').value;
+      isAdmin = data.is_admin;
       renderChats(data.chats);
       selectChat(currentChatId);
       document.getElementById('logoutBtn').disabled = false;
       document.getElementById('newChatBtn').disabled = false;
       showGreeting();
+      if (isAdmin) {
+        showAdminTab();
+      }
     }
   });
 };
 
 document.getElementById('chatBtn').onclick = function() {
-  const prompt = document.getElementById('promptInput').value.trim();
+  sendPrompt();
+};
+
+// Shift+Enter to send, Enter for newline
+const promptInput = document.getElementById('promptInput');
+promptInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (e.shiftKey) {
+      // Shift+Enter: send
+      e.preventDefault();
+      if (!promptInput.disabled && !document.getElementById('chatBtn').disabled) {
+        sendPrompt();
+      }
+    } else {
+      // Enter: newline
+      // Let the default behavior happen (insert newline)
+    }
+  }
+});
+
+function sendPrompt() {
+  const prompt = promptInput.value.trim();
   if (!currentChatId || !prompt) return;
   fetch(`${API_BASE}/chat/${currentChatId}`, {
     method: 'POST',
@@ -137,9 +163,9 @@ document.getElementById('chatBtn').onclick = function() {
     hideGreeting();
     renderHistory(data.history);
     updateChatList();
-    document.getElementById('promptInput').value = '';
+    promptInput.value = '';
   });
-};
+}
 
 document.getElementById('logoutBtn').onclick = function() {
   fetch(`${API_BASE}/logout`, {
@@ -156,8 +182,10 @@ document.getElementById('logoutBtn').onclick = function() {
     currentChatId = null;
     currentUsername = null;
     hasChatted = false;
+    isAdmin = false;
     document.getElementById('greetingHeader').textContent = "Welcome to AmberMind!";
     document.getElementById('greetingHeader').style.display = "block";
+    document.getElementById('adminTab').style.display = "none";
   });
 };
 
@@ -177,3 +205,25 @@ document.getElementById('newChatBtn').onclick = function() {
     }
   });
 };
+
+function showAdminTab() {
+  const adminTab = document.getElementById('adminTab');
+  adminTab.style.display = "block";
+  fetch(`${API_BASE}/admin`, {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.users) {
+      let html = "<b>Users:</b><ul>";
+      data.users.forEach(u => {
+        html += `<li>${u} (${data.chat_stats[u]} chats)</li>`;
+      });
+      html += "</ul>";
+      document.getElementById('adminContent').innerHTML = html;
+    } else {
+      document.getElementById('adminContent').textContent = data.error || "No data";
+    }
+  });
+}

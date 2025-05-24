@@ -66,12 +66,11 @@ def chat():
     memory = get_memory(username)
     memory.append({"role": "user", "content": prompt})
 
-    # Prepare messages for Groq API (Llama-3)
+    # Prepare messages for Groq Llama-3 API
     messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
     for msg in memory:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
-    # Call Groq API
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         return jsonify({"error": "Groq API key not set"}), 500
@@ -83,7 +82,7 @@ def chat():
             "Content-Type": "application/json"
         },
         json={
-            "model": "llama3-70b-8192",  # Or "llama3-8b-8192" for smaller model
+            "model": "llama3-70b-8192",  # Use "llama3-8b-8192" for the smaller model if you want
             "messages": messages,
             "max_tokens": 500
         }

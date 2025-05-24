@@ -6,39 +6,31 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.chat-container {
-  max-width: 700px;
-  margin: 4vw auto 0 auto;
-  background: #fffaf6;
-  border-radius: 20px;
-  box-shadow: 0 4px 32px rgba(255, 140, 0, 0.08);
-  padding: 3em 2em 2em 2em;
-  min-height: 80vh;
+.main-layout {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  min-height: 100vh;
 }
 
-h1 {
-  color: #ff8c42;
-  margin-bottom: 1.5em;
-  font-size: 2.2em;
-  font-weight: bold;
-  letter-spacing: 1px;
+.sidebar {
+  width: 320px;
+  background: #fff1e0;
+  border-right: 2px solid #ffd6a0;
+  display: flex;
+  flex-direction: column;
+  padding: 2em 1em 1em 1em;
+  box-sizing: border-box;
 }
 
 .auth-section {
   display: flex;
-  gap: 2em;
-  width: 100%;
-  justify-content: center;
-  margin-bottom: 2em;
+  flex-direction: column;
+  gap: 1.5em;
 }
 
 .auth-card {
   background: #ffe6c7;
   border-radius: 14px;
-  padding: 1.5em 2em;
+  padding: 1em 1em;
   box-shadow: 0 2px 8px rgba(255, 140, 0, 0.06);
   display: flex;
   flex-direction: column;
@@ -46,15 +38,15 @@ h1 {
 }
 
 .auth-card h2 {
-  margin-bottom: 1em;
+  margin-bottom: 0.7em;
   color: #ff8c42;
-  font-size: 1.2em;
+  font-size: 1.1em;
 }
 
 input[type="text"], input[type="password"] {
-  width: 180px;
-  padding: 0.7em;
-  margin-bottom: 0.7em;
+  width: 90%;
+  padding: 0.6em;
+  margin-bottom: 0.5em;
   font-size: 1em;
   border: 1px solid #ffd6a0;
   border-radius: 6px;
@@ -68,9 +60,9 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 button {
-  padding: 0.5em 1.2em;
+  padding: 0.4em 1em;
   font-size: 1em;
-  margin: 0.2em 0.5em 0.2em 0;
+  margin: 0.2em 0.3em 0.2em 0;
   background: #ff8c42;
   color: #fff;
   border: none;
@@ -86,18 +78,59 @@ button:disabled {
   cursor: not-allowed;
 }
 
-#chatHistory {
-  background: #fffaf2;
-  padding: 1.5em;
-  border-radius: 12px;
+.chats-section {
   margin-top: 2em;
-  min-height: 3em;
-  font-size: 1.15em;
-  color: #6d3b00;
-  box-shadow: 0 2px 8px rgba(255,140,0,0.07);
-  width: 100%;
-  max-width: 600px;
-  white-space: pre-wrap;
+}
+
+.chats-section h3 {
+  color: #b95e00;
+  margin-bottom: 0.5em;
+}
+
+#chatList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#chatList li {
+  background: #fffaf2;
+  margin-bottom: 0.3em;
+  padding: 0.6em 1em;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #b95e00;
+  transition: background 0.2s;
+  border: 2px solid transparent;
+}
+
+#chatList li.selected, #chatList li:hover {
+  background: #ffebd6;
+  border: 2px solid #ffb84d;
+}
+
+.chat-container {
+  flex: 1;
+  max-width: 900px;
+  margin: 3vw auto 0 auto;
+  background: #fffaf6;
+  border-radius: 20px;
+  box-shadow: 0 4px 32px rgba(255, 140, 0, 0.08);
+  padding: 2em 2em 2em 2em;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  color: #ff8c42;
+  margin-bottom: 1em;
+  font-size: 2em;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 .chat-section {
@@ -107,11 +140,28 @@ button:disabled {
   align-items: center;
 }
 
+.chat-history {
+  background: #fffaf2;
+  padding: 1.2em;
+  border-radius: 12px;
+  margin-bottom: 1em;
+  font-size: 1.15em;
+  color: #6d3b00;
+  box-shadow: 0 2px 8px rgba(255,140,0,0.07);
+  width: 100%;
+  max-width: 700px;
+  min-height: 340px;
+  max-height: 340px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  display: flex;
+  flex-direction: column;
+}
+
 .chat-input-row {
   width: 100%;
   display: flex;
   align-items: center;
-  margin-top: 1em;
 }
 
 #promptInput {
@@ -120,28 +170,42 @@ button:disabled {
   font-size: 1.1em;
 }
 
-@media (max-width: 900px) {
-  .chat-container {
-    max-width: 96vw;
-    padding: 1.5em 0.5em;
-  }
-  .auth-section {
-    flex-direction: column;
-    gap: 1em;
-  }
-  #chatHistory {
-    max-width: 94vw;
-  }
-  #promptInput {
-    width: 90%;
-  }
-}
 .user-msg {
   color: #b95e00;
   font-weight: bold;
   margin-bottom: 0.3em;
+  align-self: flex-end;
+  text-align: right;
 }
+
 .assistant-msg {
   color: #6d3b00;
   margin-bottom: 1em;
+  align-self: flex-start;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100vw;
+    border-right: none;
+    border-bottom: 2px solid #ffd6a0;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1em 0.5em;
+  }
+  .chat-container {
+    max-width: 98vw;
+    padding: 1.5em 0.5em;
+  }
+  .chat-history {
+    max-width: 96vw;
+  }
+  #promptInput {
+    width: 90%;
+  }
 }

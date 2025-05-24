@@ -3,9 +3,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import shelve
 import os
-
-# Add this import
-import lmstudio as lms
+import requests
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
@@ -59,9 +57,6 @@ def logout():
     session.pop("username", None)
     return jsonify({"message": "Logged out"})
 
-# Initialize the model once (outside the route)
-model = lms.llm("llama-3.2-1b-instruct")
-
 @app.route("/chat", methods=["POST"])
 def chat():
     if "username" not in session:
@@ -71,23 +66,34 @@ def chat():
     memory = get_memory(username)
     memory.append({"role": "user", "content": prompt})
 
-    # Build the conversation history for context
-    history = []
+    # Prepare messages for Groq API (Llama-3)
+    messages = [{"role": "system", "content": "You are a helpful AI assistant."}]
     for msg in memory:
-        if msg["role"] == "user":
-            history.append(f"User: {msg['content']}")
-        elif msg["role"] == "assistant":
-            history.append(f"AI: {msg['content']}")
-    conversation = "\n".join(history)
-    instruction = (
-        "You are a helpful AI assistant. "
-        "Format all your answers using Markdown. "
-        "Do not say that you are using Markdown or mention formatting."
-    )
-    full_prompt = f"{instruction}\n\n{conversation}\nAI:"
+        messages.append({"role": msg["role"], "content": msg["content"]})
 
-    # Call LM Studio model
-    ai_response = model.respond(full_prompt)
+    # Call Groq API
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return jsonify({"error": "Groq API key not set"}), 500
+
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "llama3-70b-8192",  # Or "llama3-8b-8192" for smaller model
+            "messages": messages,
+            "max_tokens": 500
+        }
+    )
+
+    if response.status_code != 200:
+        return jsonify({"error": "Groq API error", "details": response.text}), 500
+
+    data = response.json()
+    ai_response = data["choices"][0]["message"]["content"]
 
     memory.append({"role": "assistant", "content": ai_response})
     save_memory(username, memory)

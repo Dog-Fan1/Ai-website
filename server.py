@@ -67,6 +67,11 @@ def login():
         session["username"] = username
         session["is_admin"] = True
         chats = get_user_chats(username)
+        # If no chats, create one!
+        if not chats:
+            chat_id = str(uuid.uuid4())
+            chats[chat_id] = []
+            save_user_chats(username, chats)
         return jsonify({
             "message": "Login successful",
             "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats],
@@ -79,6 +84,11 @@ def login():
     session["username"] = username
     session["is_admin"] = False
     chats = get_user_chats(username)
+    # If no chats, create one!
+    if not chats:
+        chat_id = str(uuid.uuid4())
+        chats[chat_id] = []
+        save_user_chats(username, chats)
     return jsonify({
         "message": "Login successful",
         "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats],
@@ -114,24 +124,70 @@ def get_chats():
 
 @app.route("/history/<chat_id>", methods=["GET"])
 def get_history(chat_id):
-    if "username" not in session:
-        return jsonify({"error": "Not authenticated"}), 401
-    username = session["username"]
-    chats = get_user_chats(username)
-    return jsonify({"history": chats.get(chat_id, [])})
+    if "username" in session:
+        username = session["username"]
+        chats = get_user_chats(username)
+        return jsonify({"history": chats.get(chat_id, [])})
+    # Anonymous user
+    if "anon_chat_id" in session and session["anon_chat_id"] == chat_id:
+        return jsonify({"history": session.get("anon_history", [])})
+    return jsonify({"history": []})
 
 @app.route("/chat/<chat_id>", methods=["POST"])
 def chat(chat_id):
-    if "username" not in session:
-        return jsonify({"error": "Not authenticated"}), 401
-    username = session["username"]
+    username = session.get("username")
+    is_authenticated = username is not None
+
+    # Anonymous user logic
+    if not is_authenticated:
+        if "anon_chat_id" not in session:
+            session["anon_chat_id"] = str(uuid.uuid4())
+            session["anon_history"] = []
+        anon_chat_id = session["anon_chat_id"]
+        if chat_id != anon_chat_id:
+            return jsonify({"error": "Anonymous users can only use their own chat"}), 403
+        anon_history = session.get("anon_history", [])
+        if len([msg for msg in anon_history if msg["role"] == "user"]) >= 5:
+            return jsonify({"error": "Message limit reached. Please sign up to continue."}), 403
+        prompt = request.json.get("prompt", "")
+        anon_history.append({"role": "user", "content": prompt})
+
+        api_key = os.environ.get("GROQ_API_KEY")
+        messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant. Always use Markdown formatting in your responses."}]
+        for msg in anon_history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama3-70b-8192",
+                "messages": messages,
+                "max_tokens": 500
+            }
+        )
+        if response.status_code != 200:
+            return jsonify({"error": "Groq API error", "details": response.text}), 500
+
+        data = response.json()
+        ai_response = data["choices"][0]["message"]["content"]
+        anon_history.append({"role": "assistant", "content": ai_response})
+        session["anon_history"] = anon_history
+        return jsonify({
+            "response": ai_response,
+            "history": anon_history
+        })
+
+    # Authenticated user logic
     prompt = request.json.get("prompt", "")
     chats = get_user_chats(username)
     if chat_id not in chats:
         return jsonify({"error": "Chat not found"}), 404
     chats[chat_id].append({"role": "user", "content": prompt})
 
-    # Groq Llama-3 API integration (Markdown output)
     api_key = os.environ.get("GROQ_API_KEY")
     messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant. Always use Markdown formatting in your responses."}]
     for msg in chats[chat_id]:
@@ -165,13 +221,9 @@ def chat(chat_id):
 @app.route("/admin", methods=["GET"])
 def admin_panel():
     if session.get("is_admin"):
-        # Example: return user list and chat counts
         with shelve.open(USER_DB) as users, shelve.open(CHATS_DB) as chats:
             user_list = list(users.keys())
             chat_stats = {u: len(chats.get(u, {})) for u in user_list}
         return jsonify({"users": user_list, "chat_stats": chat_stats})
     else:
         return jsonify({"error": "Not authorized"}), 403
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)

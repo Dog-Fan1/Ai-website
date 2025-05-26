@@ -1,4 +1,4 @@
-const API_BASE = '';
+\const API_BASE = '';
 let currentChatId = null;
 let currentUsername = null;
 let hasChatted = false;
@@ -6,6 +6,17 @@ let isAdmin = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     hljs.highlightAll();
+    document.querySelectorAll('pre code').forEach(block => {
+        const button = document.createElement('button');
+        button.className = 'copy-btn';
+        button.textContent = 'Copy';
+        button.onclick = function() {
+            navigator.clipboard.writeText(block.textContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        };
+        block.parentNode.insertBefore(button, block);
+    });
 });
 
 const renderer = new marked.Renderer();
@@ -13,9 +24,10 @@ const renderer = new marked.Renderer();
 renderer.code = function(code, lang) {
     const validLang = hljs.getLanguage(lang) ? lang : 'plaintext';
     try {
-        return `<pre><code class="hljs language-${validLang}">${hljs.highlight(code, { language: validLang }).value}</code></pre>`;
+        const highlighted = hljs.highlight(code, { language: validLang }).value;
+        return `<div class="code-container"><button class="copy-btn">Copy</button><pre><code class="hljs language-${validLang}">${highlighted}</code></pre></div>`;
     } catch (e) {
-        return `<pre><code>${code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+        return `<div class="code-container"><button class="copy-btn">Copy</button><pre><code>${code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre></div>`;
     }
 };
 
@@ -41,6 +53,15 @@ function renderHistory(history) {
         } else if (msg.role === "assistant") {
             chatDiv.innerHTML += `<div class="assistant-msg">AmberMind: ${content}</div>`;
         }
+    });
+    chatDiv.querySelectorAll('.code-container').forEach(container => {
+        const code = container.querySelector('code');
+        const button = container.querySelector('.copy-btn');
+        button.onclick = function() {
+            navigator.clipboard.writeText(code.textContent);
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+        };
     });
     chatDiv.scrollTop = chatDiv.scrollHeight;
 }

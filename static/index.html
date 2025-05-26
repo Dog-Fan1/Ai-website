@@ -3,58 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <title>AmberMind Chat</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cellipse cx='16' cy='16' rx='14' ry='14' fill='%23FFB347'/%3E%3Cpath d='M10 18 Q16 26 22 18' stroke='%23fff' stroke-width='2' fill='none'/%3E%3Cpath d='M12 13 Q16 10 20 13' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="styles.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind configuration for custom colors and fonts MUST remain here
+        // as it's a JavaScript configuration processed by the CDN script.
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'Cascadia Code', 'monospace'],
+                    },
+                    colors: {
+                        orange: {
+                            50: '#fffaf6',
+                            100: '#ffe6c7',
+                            200: '#ffd6a0',
+                            300: '#ffc78a',
+                            400: '#ffb347',
+                            500: '#ff9900', // Main accent
+                            600: '#e68a00',
+                            700: '#cc7a00',
+                            800: '#b95e00',
+                            900: '#6d3b00',
+                        },
+                        gray: {
+                            300: '#abb2bf',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            700: '#374151',
+                            800: '#282c34',
+                        },
+                        red: {
+                            100: '#fee2e2',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="flex flex-col md:flex-row min-h-screen font-inter">
     <div class="main-layout">
-        <aside class="sidebar">
-            <div class="ai-name">🤖 AmberMind</div>
-            <div class="auth-section">
-                <div class="auth-card">
-                    <h2>Sign Up</h2>
-                    <input id="signup-username" type="text" placeholder="Username">
-                    <input id="signup-password" type="password" placeholder="Password">
-                    <button id="signupBtn">Sign Up</button>
-                    <span id="signup-result"></span>
+        <aside class="sidebar p-4 bg-orange-50 border-r-2 border-orange-300 shadow-md md:w-80 flex-shrink-0">
+            <div class="ai-name text-2xl font-extrabold text-orange-600 mb-6 text-center tracking-wide">🤖 AmberMind</div>
+
+            <div class="auth-section flex flex-col gap-4 mb-6">
+                <div class="auth-card bg-orange-100 p-4 rounded-xl shadow-sm flex flex-col items-center">
+                    <h2 class="text-xl font-semibold text-orange-600 mb-3">Sign Up</h2>
+                    <input id="signup-username" type="text" placeholder="Username" class="w-full p-2 mb-2 text-base border border-orange-300 rounded-lg bg-orange-50 focus:border-orange-500 focus:outline-none transition-colors">
+                    <input id="signup-password" type="password" placeholder="Password" class="w-full p-2 mb-2 text-base border border-orange-300 rounded-lg bg-orange-50 focus:border-orange-500 focus:outline-none transition-colors">
+                    <button id="signupBtn" class="w-full py-2 px-4 bg-orange-500 text-white font-bold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed">Sign Up</button>
+                    <span id="signup-result" class="mt-2 text-sm text-red-600"></span>
                 </div>
-                <div class="auth-card">
-                    <h2>Login</h2>
-                    <input id="login-username" type="text" placeholder="Username">
-                    <input id="login-password" type="password" placeholder="Password">
-                    <button id="loginBtn">Login</button>
-                    <span id="login-result"></span>
+                <div class="auth-card bg-orange-100 p-4 rounded-xl shadow-sm flex flex-col items-center">
+                    <h2 class="text-xl font-semibold text-orange-600 mb-3">Login</h2>
+                    <input id="login-username" type="text" placeholder="Username" class="w-full p-2 mb-2 text-base border border-orange-300 rounded-lg bg-orange-50 focus:border-orange-500 focus:outline-none transition-colors">
+                    <input id="login-password" type="password" placeholder="Password" class="w-full p-2 mb-2 text-base border border-orange-300 rounded-lg bg-orange-50 focus:border-orange-500 focus:outline-none transition-colors">
+                    <button id="loginBtn" class="w-full py-2 px-4 bg-orange-500 text-white font-bold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed">Login</button>
+                    <span id="login-result" class="mt-2 text-sm text-red-600"></span>
                 </div>
-                <button id="logoutBtn" disabled>Logout</button>
+                <button id="logoutBtn" disabled class="w-full py-2 px-4 bg-gray-400 text-white font-bold rounded-lg shadow-md hover:bg-gray-500 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">Logout</button>
             </div>
-            <div class="chats-section">
-                <h3>Your Chats</h3>
-                <button id="newChatBtn" disabled>+ New Chat</button>
-                <ul id="chatList"></ul>
+
+            <div id="userIdDisplay" class="text-sm text-gray-600 mb-4 text-center">
+                User ID: <span id="currentUserId" class="font-semibold">Not logged in</span>
             </div>
-            <div id="adminTab" class="admin-tab" style="display:none;">
-                <h3>Admin Panel</h3>
-                <div id="adminContent"></div>
+
+            <div class="chats-section flex-grow">
+                <h3 class="text-lg font-semibold text-orange-700 mb-2">Your Chats</h3>
+                <button id="newChatBtn" disabled class="w-full py-2 px-4 mb-3 bg-orange-500 text-white font-bold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed">+ New Chat</button>
+                <ul id="chatList" class="list-none p-0 m-0 max-h-64 overflow-y-auto custom-scroll">
+                    </ul>
+            </div>
+
+            <div id="adminTab" class="admin-tab bg-orange-100 p-4 rounded-xl shadow-sm mt-6 hidden">
+                <h3 class="text-lg font-semibold text-orange-700 mb-2">Admin Panel</h3>
+                <div id="adminContent" class="text-sm text-gray-700">
+                    </div>
             </div>
         </aside>
-        <main class="chat-container">
-            <h1 id="greetingHeader" class="greeting-header">Welcome to AmberMind!</h1>
-            <div class="chat-section">
-                <div id="chatHistory" class="chat-history"></div>
-                <div class="chat-input-row">
-                    <textarea id="promptInput" placeholder="Type your message... (Shift+Enter to send, Enter for newline)" disabled rows="2"></textarea>
-                    <button id="chatBtn" disabled>Send</button>
+
+        <main class="chat-container flex-1 flex flex-col items-center p-6 bg-white rounded-2xl shadow-xl mx-auto my-8 max-w-4xl">
+            <h1 id="greetingHeader" class="greeting-header text-4xl font-extrabold text-orange-600 mb-8 text-center">Welcome to AmberMind!</h1>
+
+            <div class="chat-section w-full flex flex-col items-center">
+                <div id="chatHistory" class="chat-history w-full max-w-3xl bg-orange-50 p-6 rounded-xl shadow-inner mb-6 text-lg text-orange-900 overflow-y-auto min-h-[300px] max-h-[500px] flex flex-col space-y-4">
+                    <em class="text-orange-800 text-center w-full block">Sign up or login to start chatting!</em>
+                </div>
+
+                <div class="chat-input-row w-full max-w-3xl flex items-center">
+                    <textarea id="promptInput" placeholder="Type your message... (Shift+Enter to send, Enter for newline)" disabled rows="2" class="flex-1 p-3 mr-2 text-lg border border-orange-300 rounded-lg bg-orange-50 focus:border-orange-500 focus:outline-none resize-y min-h-[48px] max-h-[120px]"></textarea>
+                    <button id="chatBtn" disabled class="py-3 px-6 bg-orange-500 text-white font-bold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed">Send</button>
+                </div>
+                <div id="loadingIndicator" class="mt-4 text-orange-600 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                 </div>
             </div>
         </main>
     </div>
-    <script src="script.js"></script>
+
+    <script type="module" src="script.js"></script>
 </body>
 </html>

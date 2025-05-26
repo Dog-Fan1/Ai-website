@@ -4,12 +4,19 @@ let currentUsername = null;
 let hasChatted = false;
 let isAdmin = false;
 
+document.addEventListener('DOMContentLoaded', function() {
+    hljs.highlightAll();
+});
+
 const renderer = new marked.Renderer();
 
-renderer.code = (code, lang) => {
-    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-    const highlightedCode = hljs.highlight(code, { language }).value;
-    return `<pre><code class="hljs language-${language}">${highlightedCode}</code></pre>`;
+renderer.code = function(code, lang) {
+    const validLang = hljs.getLanguage(lang) ? lang : 'plaintext';
+    try {
+        return `<pre><code class="hljs language-${validLang}">${hljs.highlight(code, { language: validLang }).value}</code></pre>`;
+    } catch (e) {
+        return `<pre><code>${code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+    }
 };
 
 marked.setOptions({
@@ -20,27 +27,6 @@ marked.setOptions({
     silent: true
 });
 
-function escapeHtml(unsafe) {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function safeMarkdownParse(text) {
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 1000);
-        const result = marked.parse(text, { signal: controller.signal });
-        clearTimeout(timeout);
-        return result;
-    } catch (e) {
-        return escapeHtml(text);
-    }
-}
-
 function renderHistory(history) {
     const chatDiv = document.getElementById('chatHistory');
     chatDiv.innerHTML = '';
@@ -49,10 +35,11 @@ function renderHistory(history) {
         return;
     }
     history.forEach(msg => {
+        const content = marked.parse(msg.content);
         if (msg.role === "user") {
-            chatDiv.innerHTML += `<div class="user-msg">You: ${safeMarkdownParse(msg.content)}</div>`;
+            chatDiv.innerHTML += `<div class="user-msg">You: ${content}</div>`;
         } else if (msg.role === "assistant") {
-            chatDiv.innerHTML += `<div class="assistant-msg">AmberMind: ${safeMarkdownParse(msg.content)}</div>`;
+            chatDiv.innerHTML += `<div class="assistant-msg">AmberMind: ${content}</div>`;
         }
     });
     chatDiv.scrollTop = chatDiv.scrollHeight;

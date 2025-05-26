@@ -17,7 +17,8 @@ renderer.code = function(code, lang) {
     try {
         highlightedCode = hljs.highlight(code, { language: validLang }).value;
     } catch (e) {
-        highlightedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        // Ensure 'code' is treated as a string before using string methods
+        highlightedCode = String(code).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
     return `

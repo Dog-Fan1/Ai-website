@@ -7,7 +7,6 @@ let isAdmin = false;
 // --- Syntax Highlighting for Markdown code blocks ---
 const renderer = new marked.Renderer();
 renderer.code = (code, lang) => {
-  // If the language is valid, highlight; otherwise, use auto
   if (lang && hljs.getLanguage(lang)) {
     return `<pre><code class="hljs ${lang}">${hljs.highlight(code, { language: lang }).value}</code></pre>`;
   } else {

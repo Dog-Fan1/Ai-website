@@ -178,8 +178,6 @@ button:disabled {
     flex-direction: column;
 }
 
-/* START: Additions for Syntax Highlighting */
-/* Styles for syntax highlighted code blocks within the chat history */
 .chat-history pre {
     background: #282c34; /* Dark background for code blocks (Atom One Dark default) */
     padding: 1em;
@@ -195,7 +193,6 @@ button:disabled {
     line-height: 1.4;
     color: #abb2bf; /* Default text color for code */
 }
-/* END: Additions for Syntax Highlighting */
 
 .chat-input-row {
     width: 100%;
@@ -260,6 +257,7 @@ button:disabled {
         width: 90%;
     }
 }
+
 .code-container {
     position: relative;
     margin: 1em 0;

@@ -3,14 +3,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously, signInWithCustomToken, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Marked.js and Highlight.js imports (these remain in script.js as they are JS libraries)
+// Marked.js import (this remains as it's a module import)
 import "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
-import "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js";
-import "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js";
-import "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js";
-import "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js";
-import "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js";
 
+// Highlight.js imports are REMOVED from here, as they are now in index.html
 
 // Global Variables
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -123,7 +119,7 @@ window.onload = async function() {
     }
 };
 
-// Highlight.js setup
+// Highlight.js setup - This line remains because hljs is now globally available
 hljs.highlightAll();
 
 const renderer = new marked.Renderer();
@@ -467,7 +463,7 @@ async function sendPrompt() {
         });
 
         const payload = { contents: geminiChatHistory };
-        const apiKey = "";
+        const apiKey = ""; // <--- REMEMBER TO ADD YOUR GEMINI API KEY HERE!
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(apiUrl, {

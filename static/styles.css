@@ -1,67 +1,333 @@
-/* Custom styles not easily achievable with pure Tailwind or for specific overrides */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+/* Define color palette using CSS variables for easy customization */
+:root {
+    --primary-color: #6a0dad; /* A deep, rich purple */
+    --secondary-color: #e0b0ff; /* A lighter, softer purple */
+    --accent-color: #ffd700; /* A bright, golden yellow (Amber) */
+    --background-color: #f0f2f5; /* Light gray background */
+    --card-background: #ffffff; /* White for cards/panels */
+    --text-color: #333; /* Dark gray for main text */
+    --light-text-color: #666; /* Slightly lighter gray for secondary text */
+    --border-color: #ddd; /* Light gray for borders */
+    --shadow-color: rgba(0, 0, 0, 0.1); /* Soft shadow */
+    --input-focus-shadow: rgba(106, 13, 173, 0.2); /* Primary color shadow for focus */
+}
+
+/* Basic body and container styling */
 body {
-    /* Font family is defined here as a general fallback/default. */
-    /* Specific Tailwind font classes (e.g., font-inter) are applied in HTML. */
-    font-family: 'Inter', sans-serif, Arial, sans-serif;
-    background: linear-gradient(135deg, #fff5e1 0%, #ffe0d1 100%);
-    min-height: 100vh;
-}
-
-.main-layout {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
     display: flex;
-    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Prevent body scroll, allow inner sections to scroll */
 }
 
+.container {
+    display: flex;
+    width: 90%;
+    max-width: 1200px;
+    height: 90vh; /* 90% of viewport height */
+    background-color: var(--card-background);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px var(--shadow-color);
+    overflow: hidden; /* Contains inner elements */
+}
+
+/* Sidebar Styling */
 .sidebar {
-    width: 320px;
-    background: #fff1e0;
-    border-right: 2px solid #ffd6a0;
+    width: 280px;
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 25px;
     display: flex;
     flex-direction: column;
-    padding: 2em 1em 1em 1em;
-    box-sizing: border-box;
+    border-right: 1px solid rgba(255, 255, 255, 0.2); /* Subtle right border */
+    position: relative; /* For positioning logout button */
+    /* Adjustments for no login: */
+    justify-content: center; /* Center the welcome message vertically */
+    align-items: center;
 }
 
-/* Adjustments for smaller screens */
-@media (max-width: 900px) {
-    .main-layout {
-        flex-direction: column;
+.user-info {
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-bottom: 25px; /* Keep some margin for spacing */
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+
+/* Remove .new-chat, .chat-list, .logout-button styles as they're not used in HTML */
+/* If you want to completely remove the sidebar visually, you can set its display to 'none' here */
+
+/* Main Chat Section */
+.chat-main {
+    flex-grow: 1; /* Takes up remaining space */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    /* Chat section is now the primary content, so it always flexes to fill space */
+}
+
+/* Auth Section styles are removed as it's no longer in HTML */
+
+/* Chat Section */
+.chat-section {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.8em;
+    color: var(--primary-color);
+}
+
+.chat-history {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto; /* Enable scrolling for chat messages */
+    background-color: var(--background-color);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Scrollbar for chat history */
+.chat-history::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-history::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.chat-history::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+
+.chat-message {
+    padding: 12px 18px;
+    border-radius: 10px;
+    max-width: 80%; /* Messages won't take full width */
+    word-wrap: break-word; /* Break long words */
+    line-height: 1.6;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.chat-message.user {
+    background-color: var(--primary-color);
+    color: #fff;
+    align-self: flex-end; /* Align user messages to the right */
+    border-bottom-right-radius: 2px; /* Slight design tweak */
+}
+
+.chat-message.ai {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    align-self: flex-start; /* Align AI messages to the left */
+    border-bottom-left-radius: 2px; /* Slight design tweak */
+}
+
+.chat-message p {
+    margin: 0;
+}
+
+.chat-input {
+    display: flex;
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    gap: 15px;
+}
+
+.chat-input textarea {
+    flex-grow: 1; /* Takes up most of the space */
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1.05em;
+    resize: none; /* Disable manual resizing */
+    min-height: 50px;
+    max-height: 150px; /* Limit height of textarea as user types */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    line-height: 1.5;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chat-input textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+.chat-input button {
+    padding: 12px 25px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+.chat-input button:hover {
+    background-color: #550a90;
+    transform: translateY(-2px);
+}
+
+/* Admin Panel Styling is removed as it's no longer in HTML */
+
+
+/* Markdown styling within chat messages (to make AI responses look good) */
+.chat-message pre {
+    background-color: rgba(0, 0, 0, 0.05); /* Light background for code blocks */
+    border-radius: 5px;
+    padding: 10px;
+    overflow-x: auto; /* Horizontal scroll for long code lines */
+    margin: 1em 0;
+}
+
+.chat-message code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.chat-message.user code {
+    background-color: rgba(255, 255, 255, 0.2); /* Slightly different code background for user messages */
+}
+
+.chat-message.ai code {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.chat-message h1, .chat-message h2, .chat-message h3, .chat-message h4, .chat-message h5, .chat-message h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    color: inherit; /* Inherit color from parent message div */
+}
+
+.chat-message h1 { font-size: 1.8em; }
+.chat-message h2 { font-size: 1.6em; }
+.chat-message h3 { font-size: 1.4em; }
+.chat-message h4 { font-size: 1.2em; }
+.chat-message h5 { font-size: 1.1em; }
+.chat-message h6 { font-size: 1em; }
+
+.chat-message strong {
+    font-weight: bold;
+}
+
+.chat-message em {
+    font-style: italic;
+}
+
+.chat-message ul, .chat-message ol {
+    margin-left: 20px;
+    padding: 0;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.chat-message li {
+    margin-bottom: 5px;
+}
+
+.chat-message blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 10px;
+    color: var(--light-text-color);
+    margin: 1em 0;
+    font-style: italic;
+}
+
+.chat-message a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column; /* Stack sidebar and main content */
+        width: 100%;
+        height: 100vh; /* Full height on mobile */
+        border-radius: 0; /* No rounded corners on full screen */
     }
+
     .sidebar {
-        width: 100vw;
-        border-right: none;
-        border-bottom: 2px solid #ffd6a0;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: 1em 0.5em;
+        width: 100%;
+        height: auto; /* Auto height for the row layout */
+        padding: 15px;
+        flex-direction: row; /* Layout items in a row */
+        justify-content: center; /* Center horizontally */
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        border-right: none; /* No right border on mobile */
     }
-    .chat-container {
-        max-width: 98vw;
-        padding: 1.5em 0.5em;
+
+    .user-info {
+        margin-bottom: 0;
+        border-bottom: none;
+        flex-grow: unset; /* Don't grow */
+        text-align: center;
     }
+
+    /* New chat, chat list, logout button styles removed from responsive too */
+
+    .chat-header {
+        padding: 15px;
+    }
+
+    .chat-header h2 {
+        font-size: 1.5em;
+    }
+
     .chat-history {
-        max-width: 96vw;
+        padding: 15px;
     }
-    #promptInput {
-        width: 90%;
+
+    .chat-input {
+        flex-direction: column; /* Stack textarea and button */
+        gap: 10px;
+        padding: 15px;
     }
-    .auth-section {
-        flex-direction: row; /* Keep auth cards in a row on small screens */
-        flex-wrap: wrap;
-        gap: 0.5em;
+
+    .chat-input textarea {
+        width: calc(100% - 30px); /* Adjust for padding in new layout */
+        min-height: 40px; /* Smaller min height */
     }
-    .auth-card {
-        flex: 1; /* Allow cards to take available space */
-        min-width: 150px; /* Ensure they don't get too small */
-    }
-    .ai-name {
-        display: none; /* Hide AI name on small screens to save space */
-    }
-    .chats-section {
-        display: none; /* Hide chats section on small screens initially */
-    }
-    .admin-tab {
-        display: none !important; /* Hide admin tab on small screens */
+
+    .chat-input button {
+        width: 100%; /* Full width for send button */
+        padding: 10px 20px;
+        font-size: 1em;
     }
 }

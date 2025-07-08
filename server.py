@@ -1,35 +1,17 @@
 from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
-from werkzeug.security import generate_password_hash, check_password_hash
-import shelve
 import os
 import requests
 import uuid
 
 app = Flask(__name__, static_folder="static")
+# Keep a strong secret key for session management
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 app.config['SESSION_COOKIE_SAMESITE'] = "None"
 app.config['SESSION_COOKIE_SECURE'] = True
 CORS(app, supports_credentials=True)
 
-USER_DB = "users.db"
-CHATS_DB = "chats.db"
-
-def get_user(username):
-    with shelve.open(USER_DB) as db:
-        return db.get(username)
-
-def save_user(username, password_hash):
-    with shelve.open(USER_DB, writeback=True) as db:
-        db[username] = password_hash
-
-def get_user_chats(username):
-    with shelve.open(CHATS_DB) as db:
-        return db.get(username, {})
-
-def save_user_chats(username, chats):
-    with shelve.open(CHATS_DB, writeback=True) as db:
-        db[username] = chats
+# No more USER_DB or CHATS_DB needed as we're removing user accounts
 
 @app.route("/", methods=["GET"])
 def root():
@@ -39,124 +21,77 @@ def root():
 def static_proxy(path):
     return send_from_directory(app.static_folder, path)
 
-@app.route("/signup", methods=["POST"])
-def signup():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
-    if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
-    if get_user(username):
-        return jsonify({"error": "User already exists"}), 400
-    password_hash = generate_password_hash(password)
-    save_user(username, password_hash)
-    chats = {}
-    chat_id = str(uuid.uuid4())
-    chats[chat_id] = []
-    save_user_chats(username, chats)
-    return jsonify({"message": "User created successfully", "chat_id": chat_id})
+# Removed /signup and /login routes entirely
 
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
+# Removed /logout route as there's no login
 
-    # Admin check
-    if username == "Admin" and password == "SiETHOwROltu":
-        session["username"] = username
-        session["is_admin"] = True
-        chats = get_user_chats(username)
-        # If no chats, create one!
-        if not chats:
-            chat_id = str(uuid.uuid4())
-            chats[chat_id] = []
-            save_user_chats(username, chats)
-        return jsonify({
-            "message": "Login successful",
-            "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats],
-            "is_admin": True
-        })
+# Removed /new_chat as there's only one anonymous chat session
 
-    password_hash = get_user(username)
-    if not password_hash or not check_password_hash(password_hash, password):
-        return jsonify({"error": "Invalid credentials"}), 401
-    session["username"] = username
-    session["is_admin"] = False
-    chats = get_user_chats(username)
-    # If no chats, create one!
-    if not chats:
-        chat_id = str(uuid.uuid4())
-        chats[chat_id] = []
-        save_user_chats(username, chats)
-    return jsonify({
-        "message": "Login successful",
-        "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats],
-        "is_admin": False
-    })
-
-@app.route("/logout", methods=["POST"])
-def logout():
-    session.pop("username", None)
-    session.pop("is_admin", None)
-    return jsonify({"message": "Logged out"})
-
-@app.route("/new_chat", methods=["POST"])
-def new_chat():
-    if "username" not in session:
-        return jsonify({"error": "Not authenticated"}), 401
-    username = session["username"]
-    chats = get_user_chats(username)
-    chat_id = str(uuid.uuid4())
-    chats[chat_id] = []
-    save_user_chats(username, chats)
-    return jsonify({"chat_id": chat_id})
-
+# Simplified /chats endpoint (not strictly needed, but can return info if desired)
 @app.route("/chats", methods=["GET"])
 def get_chats():
-    if "username" not in session:
-        return jsonify({"error": "Not authenticated"}), 401
-    username = session["username"]
-    chats = get_user_chats(username)
+    # For a single anonymous user, we can just return a placeholder chat or nothing.
+    # The frontend will be adapted to not expect a list of chats.
+    if "anon_chat_id" not in session:
+        session["anon_chat_id"] = str(uuid.uuid4())
+        session["anon_history"] = []
+    
+    # Return a dummy chat to satisfy the frontend's expected structure initially
+    # The frontend's JS will be updated to not rely on this for navigation
     return jsonify({
-        "chats": [{"chat_id": cid, "title": chats[cid][0]['content'][:30] if chats[cid] else "New Chat"} for cid in chats]
+        "chats": [{"chat_id": session["anon_chat_id"], "title": "Your Chat"}]
     })
 
 @app.route("/history/<chat_id>", methods=["GET"])
 def get_history(chat_id):
-    if "username" in session:
-        username = session["username"]
-        chats = get_user_chats(username)
-        return jsonify({"history": chats.get(chat_id, [])})
-    # Anonymous user
+    # This route now ONLY serves the anonymous chat history
     if "anon_chat_id" in session and session["anon_chat_id"] == chat_id:
         return jsonify({"history": session.get("anon_history", [])})
-    return jsonify({"history": []})
+    
+    # If no anon_chat_id in session or a different ID is requested, create/return empty
+    if "anon_chat_id" not in session:
+        session["anon_chat_id"] = str(uuid.uuid4())
+        session["anon_history"] = []
+    
+    # Ensure the requested chat_id matches the anon_chat_id for security/consistency
+    if chat_id != session["anon_chat_id"]:
+        return jsonify({"error": "Invalid chat ID for anonymous user"}), 403
+
+    return jsonify({"history": session.get("anon_history", [])})
 
 @app.route("/chat/<chat_id>", methods=["POST"])
 def chat(chat_id):
-    username = session.get("username")
-    is_authenticated = username is not None
+    # This route now ONLY handles anonymous chat
+    if "anon_chat_id" not in session:
+        session["anon_chat_id"] = str(uuid.uuid4())
+        session["anon_history"] = []
+    
+    anon_chat_id = session["anon_chat_id"]
+    
+    # Ensure the requested chat_id matches the current anonymous session chat_id
+    if chat_id != anon_chat_id:
+        return jsonify({"error": "Anonymous users can only use their own chat session"}), 403
+    
+    prompt = request.json.get("prompt", "")
+    anon_history = session.get("anon_history", [])
 
-    # Anonymous user logic
-    if not is_authenticated:
-        if "anon_chat_id" not in session:
-            session["anon_chat_id"] = str(uuid.uuid4())
-            session["anon_history"] = []
-        anon_chat_id = session["anon_chat_id"]
-        if chat_id != anon_chat_id:
-            return jsonify({"error": "Anonymous users can only use their own chat"}), 403
-        anon_history = session.get("anon_history", [])
-        if len([msg for msg in anon_history if msg["role"] == "user"]) >= 5:
-            return jsonify({"error": "Message limit reached. Please sign up to continue."}), 403
-        prompt = request.json.get("prompt", "")
-        anon_history.append({"role": "user", "content": prompt})
+    # The message limit for anonymous users is now the only "limitation"
+    # This limit is reset when the session expires (e.g., browser close, or server restart)
+    if len([msg for msg in anon_history if msg["role"] == "user"]) >= 5:
+        # Instead of prompting to sign up, just tell them to restart or that limit is hit.
+        return jsonify({"error": "Message limit reached. Please close and reopen your browser or clear cookies to start a new anonymous chat."}), 403
+    
+    anon_history.append({"role": "user", "content": prompt})
 
-        api_key = os.environ.get("GROQ_API_KEY")
-        messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant. Always use Markdown formatting in your responses."}]
-        for msg in anon_history:
-            messages.append({"role": msg["role"], "content": msg["content"]})
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return jsonify({"error": "GROQ_API_KEY is not configured on the server."}), 500
 
+    messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant. Always use Markdown formatting in your responses."}]
+    for msg in anon_history:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+
+    try:
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
@@ -169,61 +104,25 @@ def chat(chat_id):
                 "max_tokens": 500
             }
         )
-        if response.status_code != 200:
-            return jsonify({"error": "Groq API error", "details": response.text}), 500
-
+        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
         data = response.json()
         ai_response = data["choices"][0]["message"]["content"]
-        anon_history.append({"role": "assistant", "content": ai_response})
-        session["anon_history"] = anon_history
-        return jsonify({
-            "response": ai_response,
-            "history": anon_history
-        })
+    except requests.exceptions.RequestException as e:
+        print(f"Groq API request failed: {e}")
+        return jsonify({"error": "Groq API error", "details": str(e)}), 500
+    except KeyError as e:
+        print(f"Unexpected Groq API response format: {data}")
+        return jsonify({"error": "Unexpected API response format", "details": str(e)}), 500
 
-    # Authenticated user logic
-    prompt = request.json.get("prompt", "")
-    chats = get_user_chats(username)
-    if chat_id not in chats:
-        return jsonify({"error": "Chat not found"}), 404
-    chats[chat_id].append({"role": "user", "content": prompt})
 
-    api_key = os.environ.get("GROQ_API_KEY")
-    messages = [{"role": "system", "content": "You are AmberMind, a warm and insightful AI assistant. Always use Markdown formatting in your responses."}]
-    for msg in chats[chat_id]:
-        messages.append({"role": msg["role"], "content": msg["content"]})
-
-    response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "llama3-70b-8192",
-            "messages": messages,
-            "max_tokens": 500
-        }
-    )
-    if response.status_code != 200:
-        return jsonify({"error": "Groq API error", "details": response.text}), 500
-
-    data = response.json()
-    ai_response = data["choices"][0]["message"]["content"]
-
-    chats[chat_id].append({"role": "assistant", "content": ai_response})
-    save_user_chats(username, chats)
+    anon_history.append({"role": "assistant", "content": ai_response})
+    session["anon_history"] = anon_history # Update session with new history
+    
     return jsonify({
         "response": ai_response,
-        "history": chats[chat_id]
+        "history": anon_history,
+        "chat_id": anon_chat_id # Return the chat_id for frontend consistency
     })
 
-@app.route("/admin", methods=["GET"])
-def admin_panel():
-    if session.get("is_admin"):
-        with shelve.open(USER_DB) as users, shelve.open(CHATS_DB) as chats:
-            user_list = list(users.keys())
-            chat_stats = {u: len(chats.get(u, {})) for u in user_list}
-        return jsonify({"users": user_list, "chat_stats": chat_stats})
-    else:
-        return jsonify({"error": "Not authorized"}), 403
+# Removed /admin route and functionality
+# The concept of "Admin" users no longer exists without login.

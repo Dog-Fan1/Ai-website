@@ -7,7 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendMessageButton = document.getElementById('sendMessageButton');
     const chatTitle = document.getElementById('chatTitle');
 
-    let currentChatId = null; // Will store the anonymous chat ID from the session
+    // We'll use a fixed dummy ID for all anonymous chat interactions,
+    // as the backend will manage the actual UUID in the session.
+    const ANONYMOUS_CHAT_ID = 'current';
 
     // --- Utility Functions ---
 
@@ -103,8 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function loadAnonymousChatHistory() {
         try {
-            // Requesting history for a dummy 'anonymous' ID. Server will resolve this to the actual session ID.
-            const response = await fetch('/history/anonymous', {credentials: 'include'});
+            // Requesting history using the dummy ID. Backend will serve the actual session history.
+            const response = await fetch(`/history/${ANONYMOUS_CHAT_ID}`, {credentials: 'include'});
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error("Failed to load chat history:", errorData.error);
@@ -122,8 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If no history, display the initial welcome message again
                 displayMessage('ai', "Hello! I'm AmberMind, your AI assistant. How can I help you today?");
             }
-            // The server sets anon_chat_id in session and will return it in chat responses
-            // We don't need it for history loading since there's only one.
             chatTitle.textContent = "Your Anonymous Chat"; // Ensure consistent title
             chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
         } catch (error) {
@@ -144,17 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.value = ''; // Clear input field
         chatInput.style.height = 'auto'; // Reset textarea height
 
-        // If currentChatId is not set, we need to make an initial call to get it
-        // The /chat/<chat_id> endpoint will create it if it doesn't exist in session
-        if (!currentChatId) {
-            // First message will implicitly create the anonymous session on backend
-            // We pass a dummy 'anonymous' ID, the backend will use the session's UUID
-            currentChatId = 'anonymous';
-        }
-
         try {
-            // Send message to the backend API
-            const response = await fetch(`/chat/${currentChatId}`, {
+            // Send message using the dummy ID. Backend will handle the actual session.
+            const response = await fetch(`/chat/${ANONYMOUS_CHAT_ID}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({prompt}),
@@ -174,11 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             displayMessage('ai', data.response); // Display AI's response
-
-            // Update currentChatId with the actual UUID from the backend if it was initially null/dummy
-            if (data.chat_id && currentChatId === 'anonymous') {
-                currentChatId = data.chat_id;
-            }
+            // No need to update currentChatId here, as it's a fixed dummy value.
         } catch (error) {
             console.error('Error sending message:', error);
             alert(`A network error occurred: ${error.message}`);
@@ -206,6 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialization on Page Load ---
 
-    // Load the anonymous chat history immediately when the page loads
+    // Load the anonymous chat history immediately when the script loads
     loadAnonymousChatHistory();
 });
